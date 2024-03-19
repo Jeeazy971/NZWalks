@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NZWalks.API.Data;
 using NZWalks.API.Models.Domain;
 using NZWalks.API.Models.DTO;
+using NZWalks.API.Repositories;
 
 namespace NZWalks.API.Controllers
 {
@@ -12,16 +13,19 @@ namespace NZWalks.API.Controllers
     public class RegionsController : ControllerBase
     {
         private readonly NZWalksDbContext _dbContext;
-        public RegionsController(NZWalksDbContext dbContext)
+        private readonly IRegionRepository _regionRepository;
+
+        public RegionsController(NZWalksDbContext dbContext, IRegionRepository regionRepository)
         {
             this._dbContext = dbContext;
+            this._regionRepository = regionRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllRegions()
+        public async Task<IActionResult> GetAllRegionsAsync()
         {
 
-            var regionsDomain = await _dbContext.Regions.ToListAsync();
+            var regionsDomain = await _regionRepository.GetAllRegionsAsync();
 
             var regionsDto = new List<RegionDto>();
 
@@ -41,10 +45,11 @@ namespace NZWalks.API.Controllers
 
         [HttpGet]
         [Route("{id:Guid}")]
-        public async Task<IActionResult> GetRegionById([FromRoute] Guid id)
+        public async Task<IActionResult> GetRegionAsyncById([FromRoute] Guid id)
         {
             //var region = _dbContext.Regions.Find(id);
-            var regionDomain = await _dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
+            var regionDomain = await _regionRepository.GetRegionAsyncById(id);
+
 
             if (regionDomain == null)
             {
@@ -63,7 +68,7 @@ namespace NZWalks.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRegion([FromBody] AddRegionRequestDto addRegionRequestDto)
+        public async Task<IActionResult> CreateRegionAsync([FromBody] AddRegionRequestDto addRegionRequestDto)
         {
             var regionDomainModel = new Region
             {
@@ -83,12 +88,12 @@ namespace NZWalks.API.Controllers
                 RegionImageUrl = regionDomainModel.RegionImageUrl,
             };
 
-            return CreatedAtAction(nameof(GetRegionById), new { id = regionDomainModel.Id }, regionDto);
+            return CreatedAtAction(nameof(GetRegionAsyncById), new { id = regionDomainModel.Id }, regionDto);
         }
 
         [HttpPut]
         [Route("{id:Guid}")]
-        public async Task<IActionResult> UpdateRegion([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
+        public async Task<IActionResult> UpdateRegionAsync([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
         {
             var regionDomainModel = await _dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
 
@@ -118,7 +123,7 @@ namespace NZWalks.API.Controllers
 
         [HttpDelete]
         [Route("{id:Guid}")]
-        public async Task<IActionResult> DeleteRegion([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteRegionAsync([FromRoute] Guid id)
         {
             var regionDomainModel = await _dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
 
